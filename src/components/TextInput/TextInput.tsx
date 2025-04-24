@@ -166,6 +166,12 @@ export type Props = React.ComponentPropsWithRef<typeof NativeTextInput> & {
    */
   outlineStyle?: StyleProp<ViewStyle>;
   /**
+   * Pass style to override the default style of underlined wrapper.
+   * Overrides style when mode is set to `flat`
+   * Example: `borderRadius`, `borderColor`
+   */
+  underlineStyle?: StyleProp<ViewStyle>;
+  /**
    * Pass true to disable input focus on scroll.
    * See: https://github.com/callstack/react-native-paper/issues/4666
    */
