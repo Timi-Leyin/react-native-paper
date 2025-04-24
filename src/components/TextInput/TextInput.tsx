@@ -9,7 +9,6 @@ import {
   NativeSyntheticEvent,
   TextLayoutEventData,
 } from 'react-native';
-
 import TextInputAffix, {
   Props as TextInputAffixProps,
 } from './Adornment/TextInputAffix';
@@ -167,11 +166,10 @@ export type Props = React.ComponentPropsWithRef<typeof NativeTextInput> & {
    */
   outlineStyle?: StyleProp<ViewStyle>;
   /**
-   * Pass style to override the default style of underlined wrapper.
-   * Overrides style when mode is set to `flat`
-   * Example: `borderRadius`, `borderColor`
+   * Pass true to disable input focus on scroll.
+   * See: https://github.com/callstack/react-native-paper/issues/4666
    */
-  underlineStyle?: StyleProp<ViewStyle>;
+  disableFocusOnScroll?: boolean;
 };
 
 interface CompoundedComponent
@@ -223,7 +221,10 @@ const TextInput = forwardRef<TextInputHandles, Props>(
       error: errorProp = false,
       multiline = false,
       editable = true,
+      disableFocusOnScroll = false,
       contentStyle,
+      onScroll,
+      onTouchEnd,
       render = DefaultRenderer,
       theme: themeOverrides,
       ...rest
@@ -280,6 +281,7 @@ const TextInput = forwardRef<TextInputHandles, Props>(
       width: null,
       height: null,
     });
+    const [isScrolling, setScrolling] = React.useState(false);
 
     const timer = React.useRef<NodeJS.Timeout | undefined>();
 
@@ -403,6 +405,22 @@ const TextInput = forwardRef<TextInputHandles, Props>(
       [rightLayout.height, rightLayout.width]
     );
 
+    const handleTouchEnd = (args: any) => {
+      if (disableFocusOnScroll) {
+        setScrolling(false);
+      }
+      // also handle component specific event
+      onTouchEnd?.(args);
+    };
+
+    const handleScroll = (args: any) => {
+      if (disableFocusOnScroll) {
+        setScrolling(true);
+      }
+      // also handle component specific event
+      onScroll?.(args);
+    };
+
     const handleFocus = (args: any) => {
       if (disabled || !editable) {
         return;
@@ -484,7 +502,12 @@ const TextInput = forwardRef<TextInputHandles, Props>(
           disabled={disabled}
           error={errorProp}
           multiline={multiline}
-          editable={editable}
+          // if disabledFocusOnScroll is enabled
+          editable={
+            (disableFocusOnScroll ? !isScrolling : undefined) || editable
+          }
+          onTouchEnd={handleTouchEnd}
+          onScroll={handleScroll}
           render={render}
           {...rest}
           theme={theme}
